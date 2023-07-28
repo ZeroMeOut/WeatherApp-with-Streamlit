@@ -17,9 +17,6 @@ class WeatherData:
     def send_weather_data(self):
         while True:
             openweathermapResponse = requests.get(f'https://api.openweathermap.org/data/2.5/weather?lat={self.lat}&lon={self.lon}&appid={self.apikey}')
-            jsonOpenweathermapResponse = json.loads(openweathermapResponse.text)
-
-            self.producer.send('dataflow', value=jsonOpenweathermapResponse)
+            self.producer.send('dataflow', value=openweathermapResponse.text)
             
-            sleep(10000)
     
