@@ -1,31 +1,11 @@
 import requests
-import pprint
-import json
 import time
+import json
 from kafka import KafkaProducer
 from json import dumps
 
-# Getting Geo Location, longitude and latitude
-address = "London"
-geocodeResponse = requests.get(f"https://geocode.maps.co/search?q={address}")
-geocodeResponse.raise_for_status()
-# print(response.status_code)
 
-jsonGeocodeResponse = json.loads(geocodeResponse.text)
 
-def cleanResponse(response: list):
-    list_of_results = []
-
-    for value in response:
-        dict = {'display_name': value['display_name'],
-                'lat': value['lat'],
-                'lon': value['lon']
-        }
-        
-        list_of_results.append(dict)
-    return list_of_results
-
-data = cleanResponse(jsonGeocodeResponse)
 
 location = data[0]
 lat = location['lat']
@@ -41,5 +21,7 @@ while True:
     jsonOpenweathermapResponse = json.loads(openweathermapResponse.text)
 
     producer.send('dataflow',value= jsonOpenweathermapResponse)
+    
+    time.sleep(10)
 
 
