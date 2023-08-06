@@ -24,7 +24,7 @@ def data_cleanup(message):
 consumer = KafkaConsumer(
     'dataflow',
     bootstrap_servers=['localhost:9092'],
-    auto_offset_reset='lastest',
+    auto_offset_reset= 'earliest',
     enable_auto_commit=True,
     group_id='my-group',
     value_deserializer=lambda x: loads(x.decode('utf-8')))
@@ -32,6 +32,7 @@ consumer = KafkaConsumer(
 
 
 for message in consumer:
-    st.write(f"Received message: {message.value}")
+    
+    st.write(message.value)
 
 

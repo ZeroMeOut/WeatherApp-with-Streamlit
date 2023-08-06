@@ -1,16 +1,12 @@
 import streamlit as st
 
-import requests
 import json
+import subprocess
+from utilities import locator
 from time import sleep
-from kafka import KafkaProducer
-from json import dumps
-from json import loads
-from utilities import locator, openweathermap
-from kafka import KafkaConsumer
 
 
-# For Binary Search, this part doesn,t work well for some reason
+# For Binary Search, this part doesn't work really well for some reason
 def binary_search(list_of_dicts, key, target):
     low = 0
     high = len(list_of_dicts) - 1
@@ -28,11 +24,17 @@ def binary_search(list_of_dicts, key, target):
 
     return None
 
+if 'pid' not in st.session_state:
+    st.session_state.pid = None
+
+python_executable = 'weatherevenv/Scripts/python.exe' # You may need to change this for your environment
+python_script = 'producer.py'
+command = [python_executable, python_script]
 
 st.title('Configure')
 
-api_key = st.text_input('API Key', value = "5bfa7c20f7c28654ffefacc67dbc0913")
-user_input = st.text_input('Input location')
+api_key = st.text_input('API Key', value = "5bfa7c20f7c28654ffefacc67dbc0913") # Gets the api key from the user
+user_input = st.text_input('Input location') # Gets the user input
 
 locator = locator.Locator(user_input)
 locations = locator.lonlat()
@@ -44,22 +46,34 @@ target = st.selectbox(
     display_names
 )
 
-
-selected_location = binary_search(locations, 'display_name', target)
+selected_location = binary_search(locations, 'display_name', target) # Gets the selected location
 
 if selected_location is not None:
-    lat = selected_location['lat']
-    lon = selected_location['lon']
+    if st.session_state.pid is not None:
+         subprocess.run(['taskkill', '/F', '/PID', str(st.session_state.pid)])
 
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
-                                      value_serializer=lambda x: dumps(x).encode('utf-8'))
+    data = {'lat': selected_location['lat'], 'lon': selected_location['lon'], 'api_key': api_key}
+
+    jsonString = json.dumps(data)
+    jsonFile = open("data.json", "w")
+    jsonFile.write(jsonString)
+    jsonFile.close()
+
+    process = subprocess.Popen(command)
+
+    st.session_state.pid = process.pid
+
+else:
+    if st.session_state.pid is not None:
+        subprocess.run(['taskkill', '/F', '/PID', str(st.session_state.pid)])
     
-    while True:
-            openweathermapResponse = requests.get(f'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}')
-            jsonOpenweathermapResponse = json.loads(openweathermapResponse.text)
+    st.session_state.pid = None
 
-            producer.send('dataflow', value=jsonOpenweathermapResponse)
-            producer.flush()
+
+
+
+
+    
 
 
 
