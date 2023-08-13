@@ -33,7 +33,7 @@ command = [python_executable, python_script]
 
 st.title('Configure')
 
-api_key = st.text_input('API Key', value = "5bfa7c20f7c28654ffefacc67dbc0913") # Gets the api key from the user
+api_key = st.text_input('API Key', value = "") # Gets the api key from the user
 user_input = st.text_input('Input location') # Gets the user input
 
 locator = locator.Locator(user_input)
